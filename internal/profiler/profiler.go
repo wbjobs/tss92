@@ -63,8 +63,13 @@ func (p *PerformanceProfiler) ProfileCode(ctx context.Context, req *pb.ProfileRe
 		memoryPeakMB = execResult.ResourceData.MemoryPeak
 	}
 
+	cpuTimeMs := profileStats.CPUTimeMs
+	if execResult.AdjustedCPUTime > 0 {
+		cpuTimeMs = execResult.AdjustedCPUTime
+	}
+
 	metrics := &pb.PerformanceMetrics{
-		CpuTimeMs:       profileStats.CPUTimeMs,
+		CpuTimeMs:       cpuTimeMs,
 		MemoryPeakMb:    memoryPeakMB,
 		IoReadCount:     ioReadCount,
 		IoWriteCount:    ioWriteCount,
@@ -76,6 +81,23 @@ func (p *PerformanceProfiler) ProfileCode(ctx context.Context, req *pb.ProfileRe
 	}
 
 	autoTags := sandbox.GenerateAutoTags(profileStats)
+	if execResult.KilledByOOM {
+		autoTags = append(autoTags, "oom_killed")
+		metrics.Success = false
+		if metrics.ErrorMessage == "" {
+			metrics.ErrorMessage = "Out of memory"
+		}
+	}
+	if execResult.TimedOut {
+		autoTags = append(autoTags, "timeout")
+		metrics.Success = false
+		if metrics.ErrorMessage == "" {
+			metrics.ErrorMessage = "Execution timed out"
+		}
+	}
+	if execResult.CalibrationFactor != 0 && execResult.CalibrationFactor > 1.5 {
+		autoTags = append(autoTags, "high_contention")
+	}
 	allTags := mergeTags(req.Tags, autoTags)
 
 	profileID := uuid.New().String()

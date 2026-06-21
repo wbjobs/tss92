@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -65,6 +66,17 @@ func main() {
 
 	p := profiler.NewPerformanceProfiler(sb, st)
 	log.Println("Profiler initialized successfully")
+
+	warmupCtx, warmupCancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	go func() {
+		defer warmupCancel()
+		log.Println("Starting warmup calibration for all languages...")
+		if err := sb.Warmup(warmupCtx, []string{"python", "java", "go"}); err != nil {
+			log.Printf("Warmup completed with warnings: %v", err)
+		} else {
+			log.Println("Warmup calibration completed successfully")
+		}
+	}()
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
