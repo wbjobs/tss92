@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package profiler;
+
+option go_package = "profiler/proto";
+
+enum Language {
+  PYTHON = 0;
+  JAVA = 1;
+  GO = 2;
+}
+
+message ParameterSample {
+  string name = 1;
+  string type = 2;
+  string value = 3;
+}
+
+message ProfileRequest {
+  Language language = 1;
+  string code = 2;
+  string function_name = 3;
+  repeated ParameterSample parameters = 4;
+  repeated string tags = 5;
+  int32 timeout_seconds = 6;
+}
+
+message PerformanceMetrics {
+  double cpu_time_ms = 1;
+  double memory_peak_mb = 2;
+  int64 io_read_count = 3;
+  int64 io_write_count = 4;
+  int64 gc_count = 5;
+  double gc_time_ms = 6;
+  double execution_time_ms = 7;
+  bool success = 8;
+  string error_message = 9;
+}
+
+message ProfileResponse {
+  string profile_id = 1;
+  PerformanceMetrics metrics = 2;
+  repeated string assigned_tags = 3;
+}
+
+message TagQuery {
+  repeated string tags = 1;
+  string operator = 2;
+}
+
+message ProfileQueryRequest {
+  TagQuery tag_query = 1;
+  int64 start_time_unix = 2;
+  int64 end_time_unix = 3;
+  int32 limit = 4;
+}
+
+message ProfileEntry {
+  string profile_id = 1;
+  Language language = 2;
+  string function_name = 3;
+  PerformanceMetrics metrics = 4;
+  repeated string tags = 5;
+  int64 timestamp_unix = 6;
+}
+
+message ProfileQueryResponse {
+  repeated ProfileEntry profiles = 1;
+  int32 total_count = 2;
+}
+
+service PerformanceProfiler {
+  rpc ProfileCode(ProfileRequest) returns (ProfileResponse);
+  rpc QueryProfiles(ProfileQueryRequest) returns (ProfileQueryResponse);
+}
