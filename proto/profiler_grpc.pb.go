@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 type PerformanceProfilerClient interface {
 	ProfileCode(ctx context.Context, in *ProfileRequest, opts ...grpc.CallOption) (*ProfileResponse, error)
 	QueryProfiles(ctx context.Context, in *ProfileQueryRequest, opts ...grpc.CallOption) (*ProfileQueryResponse, error)
+	CompareProfiles(ctx context.Context, in *CompareProfilesRequest, opts ...grpc.CallOption) (*CompareProfilesResponse, error)
 }
 
 type performanceProfilerClient struct {
@@ -51,12 +52,22 @@ func (c *performanceProfilerClient) QueryProfiles(ctx context.Context, in *Profi
 	return out, nil
 }
 
+func (c *performanceProfilerClient) CompareProfiles(ctx context.Context, in *CompareProfilesRequest, opts ...grpc.CallOption) (*CompareProfilesResponse, error) {
+	out := new(CompareProfilesResponse)
+	err := c.cc.Invoke(ctx, "/profiler.PerformanceProfiler/CompareProfiles", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PerformanceProfilerServer is the server API for PerformanceProfiler service.
 // All implementations must embed UnimplementedPerformanceProfilerServer
 // for forward compatibility
 type PerformanceProfilerServer interface {
 	ProfileCode(context.Context, *ProfileRequest) (*ProfileResponse, error)
 	QueryProfiles(context.Context, *ProfileQueryRequest) (*ProfileQueryResponse, error)
+	CompareProfiles(context.Context, *CompareProfilesRequest) (*CompareProfilesResponse, error)
 	mustEmbedUnimplementedPerformanceProfilerServer()
 }
 
@@ -69,6 +80,9 @@ func (UnimplementedPerformanceProfilerServer) ProfileCode(context.Context, *Prof
 }
 func (UnimplementedPerformanceProfilerServer) QueryProfiles(context.Context, *ProfileQueryRequest) (*ProfileQueryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryProfiles not implemented")
+}
+func (UnimplementedPerformanceProfilerServer) CompareProfiles(context.Context, *CompareProfilesRequest) (*CompareProfilesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CompareProfiles not implemented")
 }
 func (UnimplementedPerformanceProfilerServer) mustEmbedUnimplementedPerformanceProfilerServer() {}
 
@@ -119,6 +133,24 @@ func _PerformanceProfiler_QueryProfiles_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PerformanceProfiler_CompareProfiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CompareProfilesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PerformanceProfilerServer).CompareProfiles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/profiler.PerformanceProfiler/CompareProfiles",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PerformanceProfilerServer).CompareProfiles(ctx, req.(*CompareProfilesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PerformanceProfiler_ServiceDesc is the grpc.ServiceDesc for PerformanceProfiler service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -133,6 +165,10 @@ var PerformanceProfiler_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "QueryProfiles",
 			Handler:    _PerformanceProfiler_QueryProfiles_Handler,
+		},
+		{
+			MethodName: "CompareProfiles",
+			Handler:    _PerformanceProfiler_CompareProfiles_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"profiler/internal/comparator"
 	"profiler/internal/sandbox"
 	"profiler/internal/storage"
 	pb "profiler/proto"
@@ -203,4 +204,47 @@ func mergeTags(userTags, autoTags []string) []string {
 		result = append(result, t)
 	}
 	return result
+}
+
+func (p *PerformanceProfiler) CompareProfiles(ctx context.Context, req *pb.CompareProfilesRequest) (*pb.CompareProfilesResponse, error) {
+	if req.OldProfileId == "" || req.NewProfileId == "" {
+		return nil, fmt.Errorf("both old_profile_id and new_profile_id are required")
+	}
+
+	oldRecord, err := p.storage.GetProfileByID(ctx, req.OldProfileId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get old profile: %w", err)
+	}
+
+	newRecord, err := p.storage.GetProfileByID(ctx, req.NewProfileId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get new profile: %w", err)
+	}
+
+	var cfg *comparator.CompareConfig
+	if req.SignificanceThreshold > 0 {
+		cfg = comparator.DefaultCompareConfig()
+		cfg.SignificanceThreshold = req.SignificanceThreshold
+	}
+
+	result, err := comparator.CompareProfiles(
+		oldRecord, newRecord,
+		req.OldSourceCode, req.NewSourceCode,
+		cfg,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("comparison failed: %w", err)
+	}
+
+	return &pb.CompareProfilesResponse{
+		OldProfileId:    req.OldProfileId,
+		NewProfileId:    req.NewProfileId,
+		TimeDeltaSeconds: result.TimeDeltaSec,
+		MetricDiffs:     result.MetricDiffs,
+		OverallSummary:  result.OverallSummary,
+		PerformanceTrend: result.PerformanceTrend,
+		SourceDiffs:     result.SourceDiffs,
+		RegressionTags:  result.RegressionTags,
+		ImprovementTags: result.ImprovementTags,
+	}, nil
 }

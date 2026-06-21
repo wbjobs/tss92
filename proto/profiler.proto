@@ -69,7 +69,47 @@ message ProfileQueryResponse {
   int32 total_count = 2;
 }
 
+message MetricDiff {
+  string metric_name = 1;
+  double old_value = 2;
+  double new_value = 3;
+  double absolute_diff = 4;
+  double percentage_diff = 5;
+  string change_type = 6;
+  bool is_significant = 7;
+}
+
+message SourceLineDiff {
+  int32 line_number = 1;
+  string old_line = 2;
+  string new_line = 3;
+  string line_type = 4;
+  string diff_hint = 5;
+  double performance_impact_score = 6;
+}
+
+message CompareProfilesRequest {
+  string old_profile_id = 1;
+  string new_profile_id = 2;
+  string old_source_code = 3;
+  string new_source_code = 4;
+  double significance_threshold = 5;
+}
+
+message CompareProfilesResponse {
+  string old_profile_id = 1;
+  string new_profile_id = 2;
+  int64 time_delta_seconds = 3;
+  repeated MetricDiff metric_diffs = 4;
+  string overall_summary = 5;
+  string performance_trend = 6;
+  repeated SourceLineDiff source_diffs = 7;
+  repeated string regression_tags = 8;
+  repeated string improvement_tags = 9;
+}
+
 service PerformanceProfiler {
   rpc ProfileCode(ProfileRequest) returns (ProfileResponse);
   rpc QueryProfiles(ProfileQueryRequest) returns (ProfileQueryResponse);
+  rpc CompareProfiles(CompareProfilesRequest) returns (CompareProfilesResponse);
 }

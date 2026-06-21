@@ -353,3 +353,243 @@ func (x *ProfileQueryResponse) GetTotalCount() int32 {
 
 func (x *ProfileQueryResponse) Reset()         { *x = ProfileQueryResponse{} }
 func (x *ProfileQueryResponse) ProtoMessage() {}
+
+type MetricDiff struct {
+	MetricName     string  `protobuf:"bytes,1,opt,name=metric_name,json=metricName,proto3" json:"metric_name,omitempty"`
+	OldValue       float64 `protobuf:"fixed64,2,opt,name=old_value,json=oldValue,proto3" json:"old_value,omitempty"`
+	NewValue       float64 `protobuf:"fixed64,3,opt,name=new_value,json=newValue,proto3" json:"new_value,omitempty"`
+	AbsoluteDiff   float64 `protobuf:"fixed64,4,opt,name=absolute_diff,json=absoluteDiff,proto3" json:"absolute_diff,omitempty"`
+	PercentageDiff float64 `protobuf:"fixed64,5,opt,name=percentage_diff,json=percentageDiff,proto3" json:"percentage_diff,omitempty"`
+	ChangeType     string  `protobuf:"bytes,6,opt,name=change_type,json=changeType,proto3" json:"change_type,omitempty"`
+	IsSignificant  bool    `protobuf:"varint,7,opt,name=is_significant,json=isSignificant,proto3" json:"is_significant,omitempty"`
+}
+
+func (x *MetricDiff) GetMetricName() string {
+	if x != nil {
+		return x.MetricName
+	}
+	return ""
+}
+
+func (x *MetricDiff) GetOldValue() float64 {
+	if x != nil {
+		return x.OldValue
+	}
+	return 0
+}
+
+func (x *MetricDiff) GetNewValue() float64 {
+	if x != nil {
+		return x.NewValue
+	}
+	return 0
+}
+
+func (x *MetricDiff) GetAbsoluteDiff() float64 {
+	if x != nil {
+		return x.AbsoluteDiff
+	}
+	return 0
+}
+
+func (x *MetricDiff) GetPercentageDiff() float64 {
+	if x != nil {
+		return x.PercentageDiff
+	}
+	return 0
+}
+
+func (x *MetricDiff) GetChangeType() string {
+	if x != nil {
+		return x.ChangeType
+	}
+	return ""
+}
+
+func (x *MetricDiff) GetIsSignificant() bool {
+	if x != nil {
+		return x.IsSignificant
+	}
+	return false
+}
+
+func (x *MetricDiff) Reset()         { *x = MetricDiff{} }
+func (x *MetricDiff) ProtoMessage() {}
+
+type SourceLineDiff struct {
+	LineNumber           int32   `protobuf:"varint,1,opt,name=line_number,json=lineNumber,proto3" json:"line_number,omitempty"`
+	OldLine              string  `protobuf:"bytes,2,opt,name=old_line,json=oldLine,proto3" json:"old_line,omitempty"`
+	NewLine              string  `protobuf:"bytes,3,opt,name=new_line,json=newLine,proto3" json:"new_line,omitempty"`
+	LineType             string  `protobuf:"bytes,4,opt,name=line_type,json=lineType,proto3" json:"line_type,omitempty"`
+	DiffHint             string  `protobuf:"bytes,5,opt,name=diff_hint,json=diffHint,proto3" json:"diff_hint,omitempty"`
+	PerformanceImpactScore float64 `protobuf:"fixed64,6,opt,name=performance_impact_score,json=performanceImpactScore,proto3" json:"performance_impact_score,omitempty"`
+}
+
+func (x *SourceLineDiff) GetLineNumber() int32 {
+	if x != nil {
+		return x.LineNumber
+	}
+	return 0
+}
+
+func (x *SourceLineDiff) GetOldLine() string {
+	if x != nil {
+		return x.OldLine
+	}
+	return ""
+}
+
+func (x *SourceLineDiff) GetNewLine() string {
+	if x != nil {
+		return x.NewLine
+	}
+	return ""
+}
+
+func (x *SourceLineDiff) GetLineType() string {
+	if x != nil {
+		return x.LineType
+	}
+	return ""
+}
+
+func (x *SourceLineDiff) GetDiffHint() string {
+	if x != nil {
+		return x.DiffHint
+	}
+	return ""
+}
+
+func (x *SourceLineDiff) GetPerformanceImpactScore() float64 {
+	if x != nil {
+		return x.PerformanceImpactScore
+	}
+	return 0
+}
+
+func (x *SourceLineDiff) Reset()         { *x = SourceLineDiff{} }
+func (x *SourceLineDiff) ProtoMessage() {}
+
+type CompareProfilesRequest struct {
+	OldProfileId         string  `protobuf:"bytes,1,opt,name=old_profile_id,json=oldProfileId,proto3" json:"old_profile_id,omitempty"`
+	NewProfileId         string  `protobuf:"bytes,2,opt,name=new_profile_id,json=newProfileId,proto3" json:"new_profile_id,omitempty"`
+	OldSourceCode        string  `protobuf:"bytes,3,opt,name=old_source_code,json=oldSourceCode,proto3" json:"old_source_code,omitempty"`
+	NewSourceCode        string  `protobuf:"bytes,4,opt,name=new_source_code,json=newSourceCode,proto3" json:"new_source_code,omitempty"`
+	SignificanceThreshold float64 `protobuf:"fixed64,5,opt,name=significance_threshold,json=significanceThreshold,proto3" json:"significance_threshold,omitempty"`
+}
+
+func (x *CompareProfilesRequest) GetOldProfileId() string {
+	if x != nil {
+		return x.OldProfileId
+	}
+	return ""
+}
+
+func (x *CompareProfilesRequest) GetNewProfileId() string {
+	if x != nil {
+		return x.NewProfileId
+	}
+	return ""
+}
+
+func (x *CompareProfilesRequest) GetOldSourceCode() string {
+	if x != nil {
+		return x.OldSourceCode
+	}
+	return ""
+}
+
+func (x *CompareProfilesRequest) GetNewSourceCode() string {
+	if x != nil {
+		return x.NewSourceCode
+	}
+	return ""
+}
+
+func (x *CompareProfilesRequest) GetSignificanceThreshold() float64 {
+	if x != nil {
+		return x.SignificanceThreshold
+	}
+	return 0
+}
+
+func (x *CompareProfilesRequest) Reset()         { *x = CompareProfilesRequest{} }
+func (x *CompareProfilesRequest) ProtoMessage() {}
+
+type CompareProfilesResponse struct {
+	OldProfileId   string           `protobuf:"bytes,1,opt,name=old_profile_id,json=oldProfileId,proto3" json:"old_profile_id,omitempty"`
+	NewProfileId   string           `protobuf:"bytes,2,opt,name=new_profile_id,json=newProfileId,proto3" json:"new_profile_id,omitempty"`
+	TimeDeltaSeconds int64          `protobuf:"varint,3,opt,name=time_delta_seconds,json=timeDeltaSeconds,proto3" json:"time_delta_seconds,omitempty"`
+	MetricDiffs    []*MetricDiff    `protobuf:"bytes,4,rep,name=metric_diffs,json=metricDiffs,proto3" json:"metric_diffs,omitempty"`
+	OverallSummary string           `protobuf:"bytes,5,opt,name=overall_summary,json=overallSummary,proto3" json:"overall_summary,omitempty"`
+	PerformanceTrend string         `protobuf:"bytes,6,opt,name=performance_trend,json=performanceTrend,proto3" json:"performance_trend,omitempty"`
+	SourceDiffs    []*SourceLineDiff `protobuf:"bytes,7,rep,name=source_diffs,json=sourceDiffs,proto3" json:"source_diffs,omitempty"`
+	RegressionTags []string         `protobuf:"bytes,8,rep,name=regression_tags,json=regressionTags,proto3" json:"regression_tags,omitempty"`
+	ImprovementTags []string        `protobuf:"bytes,9,rep,name=improvement_tags,json=improvementTags,proto3" json:"improvement_tags,omitempty"`
+}
+
+func (x *CompareProfilesResponse) GetOldProfileId() string {
+	if x != nil {
+		return x.OldProfileId
+	}
+	return ""
+}
+
+func (x *CompareProfilesResponse) GetNewProfileId() string {
+	if x != nil {
+		return x.NewProfileId
+	}
+	return ""
+}
+
+func (x *CompareProfilesResponse) GetTimeDeltaSeconds() int64 {
+	if x != nil {
+		return x.TimeDeltaSeconds
+	}
+	return 0
+}
+
+func (x *CompareProfilesResponse) GetMetricDiffs() []*MetricDiff {
+	if x != nil {
+		return x.MetricDiffs
+	}
+	return nil
+}
+
+func (x *CompareProfilesResponse) GetOverallSummary() string {
+	if x != nil {
+		return x.OverallSummary
+	}
+	return ""
+}
+
+func (x *CompareProfilesResponse) GetPerformanceTrend() string {
+	if x != nil {
+		return x.PerformanceTrend
+	}
+	return ""
+}
+
+func (x *CompareProfilesResponse) GetSourceDiffs() []*SourceLineDiff {
+	if x != nil {
+		return x.SourceDiffs
+	}
+	return nil
+}
+
+func (x *CompareProfilesResponse) GetRegressionTags() []string {
+	if x != nil {
+		return x.RegressionTags
+	}
+	return nil
+}
+
+func (x *CompareProfilesResponse) GetImprovementTags() []string {
+	if x != nil {
+		return x.ImprovementTags
+	}
+	return nil
+}
+
+func (x *CompareProfilesResponse) Reset()         { *x = CompareProfilesResponse{} }
+func (x *CompareProfilesResponse) ProtoMessage() {}

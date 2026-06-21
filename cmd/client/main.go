@@ -22,9 +22,14 @@ var (
 	function = flag.String("func", "profile_target", "Function name to profile")
 	timeout  = flag.Int("timeout", 30, "Timeout in seconds")
 	tags     = flag.String("tags", "", "Comma-separated tags")
-	query    = flag.Bool("query", false, "Query profiles instead of profiling")
+	mode     = flag.String("mode", "profile", "Mode: profile, query, or compare")
 	queryTags = flag.String("query-tags", "", "Tags to query (comma-separated)")
 	limit    = flag.Int("limit", 10, "Query limit")
+	oldProfile = flag.String("old-profile", "", "Old profile ID for comparison")
+	newProfile = flag.String("new-profile", "", "New profile ID for comparison")
+	oldCode   = flag.String("old-code", "", "Path to old source code file")
+	newCode   = flag.String("new-code", "", "Path to new source code file")
+	significance = flag.Float64("significance", 10.0, "Significance threshold percentage")
 )
 
 func main() {
@@ -39,12 +44,14 @@ func main() {
 	client := pb.NewPerformanceProfilerClient(conn)
 	ctx := context.Background()
 
-	if *query {
+	switch *mode {
+	case "query":
 		queryProfiles(ctx, client)
-		return
+	case "compare":
+		compareProfiles(ctx, client)
+	default:
+		profileCode(ctx, client)
 	}
-
-	profileCode(ctx, client)
 }
 
 func profileCode(ctx context.Context, client pb.PerformanceProfilerClient) {
@@ -168,4 +175,133 @@ func splitTags(s string) []string {
 		}
 	}
 	return result
+}
+
+func compareProfiles(ctx context.Context, client pb.PerformanceProfilerClient) {
+	if *oldProfile == "" || *newProfile == "" {
+		log.Fatal("Both --old-profile and --new-profile are required for compare mode")
+	}
+
+	oldSource, _ := readCodeFile(*oldCode)
+	newSource, _ := readCodeFile(*newCode)
+
+	req := &pb.CompareProfilesRequest{
+		OldProfileId:        *oldProfile,
+		NewProfileId:        *newProfile,
+		OldSourceCode:       oldSource,
+		NewSourceCode:       newSource,
+		SignificanceThreshold: *significance,
+	}
+
+	log.Printf("Comparing profiles: %s vs %s...", (*oldProfile)[:8], (*newProfile)[:8])
+	start := time.Now()
+
+	resp, err := client.CompareProfiles(ctx, req)
+	if err != nil {
+		log.Fatalf("Comparison failed: %v", err)
+	}
+
+	elapsed := time.Since(start)
+	log.Printf("Comparison completed in %v", elapsed)
+
+	fmt.Println("\n=== Performance Comparison ===")
+	fmt.Printf("Old Profile:   %s\n", resp.OldProfileId)
+	fmt.Printf("New Profile:   %s\n", resp.NewProfileId)
+	fmt.Printf("Time Delta:    %s\n", formatDuration(resp.TimeDeltaSeconds))
+	fmt.Printf("Trend:         %s\n", formatTrend(resp.PerformanceTrend))
+	fmt.Printf("\nSummary:       %s\n", resp.OverallSummary)
+
+	fmt.Println("\n--- Metric Differences ---")
+	for _, diff := range resp.MetricDiffs {
+		sigMark := ""
+		if diff.IsSignificant {
+			sigMark = " *"
+		}
+
+		changeMark := ""
+		switch diff.ChangeType {
+		case "regression":
+			changeMark = "↑"
+		case "improvement":
+			changeMark = "↓"
+		}
+
+		fmt.Printf("  %-20s: %10.2f → %10.2f  diff: %+10.2f (%+7.1f%%) %s%s\n",
+			diff.MetricName,
+			diff.OldValue,
+			diff.NewValue,
+			diff.AbsoluteDiff,
+			diff.PercentageDiff,
+			changeMark,
+			sigMark,
+		)
+	}
+
+	fmt.Println("\n* = statistically significant change")
+
+	if len(resp.RegressionTags) > 0 {
+		fmt.Println("\nRegression Tags:")
+		for _, tag := range resp.RegressionTags {
+			fmt.Printf("  - %s\n", tag)
+		}
+	}
+	if len(resp.ImprovementTags) > 0 {
+		fmt.Println("\nImprovement Tags:")
+		for _, tag := range resp.ImprovementTags {
+			fmt.Printf("  - %s\n", tag)
+		}
+	}
+
+	if len(resp.SourceDiffs) > 0 {
+		fmt.Println("\n--- Source Code Differences ---")
+		for _, diff := range resp.SourceDiffs {
+			prefix := "  "
+			switch diff.LineType {
+			case "added":
+				prefix = "+ "
+			case "removed":
+				prefix = "- "
+			}
+			impactStr := ""
+			if diff.PerformanceImpactScore != 0 {
+				impactStr = fmt.Sprintf(" [impact: %.1f]", diff.PerformanceImpactScore)
+			}
+			fmt.Printf("%sLine %d:%s %s\n", prefix, diff.LineNumber, impactStr, diff.DiffHint)
+			if diff.LineType == "added" && diff.NewLine != "" {
+				fmt.Printf("    + %s\n", diff.NewLine)
+			}
+			if diff.LineType == "removed" && diff.OldLine != "" {
+				fmt.Printf("    - %s\n", diff.OldLine)
+			}
+			if diff.DiffHint != "" {
+				fmt.Printf("      %s\n", diff.DiffHint)
+			}
+			fmt.Println()
+		}
+	}
+}
+
+func formatDuration(seconds int64) string {
+	if seconds < 60 {
+		return fmt.Sprintf("%d seconds", seconds)
+	}
+	if seconds < 3600 {
+		return fmt.Sprintf("%d minutes", seconds/60)
+	}
+	if seconds < 86400 {
+		return fmt.Sprintf("%d hours", seconds/3600)
+	}
+	return fmt.Sprintf("%d days", seconds/86400)
+}
+
+func formatTrend(trend string) string {
+	colors := map[string]string{
+		"improved":  "↓ IMPROVED",
+		"regressed": "↑ REGRESSED",
+		"stable":    "→ STABLE",
+	}
+	if t, ok := colors[trend]; ok {
+		return t
+	}
+	return trend
 }
